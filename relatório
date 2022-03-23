@@ -1,0 +1,178 @@
+
+import pdfMake from 'pdfmake/build/pdfmake'
+import pdfFonts from 'pdfmake/build/vfs_fonts'
+import { format } from 'date-fns'
+
+
+
+
+async function clientesPDF(clientes){
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    const data= format(new Date(), 'dd/MM/yyyy HH:MM')
+    const datafiltro=format(new Date(), 'dd/MM/yyyy ')
+ 
+    const cabecalho =  [
+        {
+            table:{
+                style:'tableExample',
+                headerRows: 1,
+                widths: ['*','*','*'],
+                body: [
+                    
+                    [
+                        {text: 'APS-Tascom ',  style: 'noBorders', fontSize: 8,alignment:'left' ,margin:[10,0,0,0], border:[false,false,false,false]},  //alignment:'center','left'
+                        {text: 'TASCOM TECNOLOGIA ',  style: 'noBorders', fontSize: 8,alignment:'center' ,margin:[0,0,0,0], border:[false,false,false,false]},
+                        {text:   'Em:' + data,  style: 'noBorders', fontSize: 8,alignment:'right' ,margin:[0,0,10,0], border:[false,false,false,false]},
+                        
+                    ],
+
+                ]
+            },
+            layout:'Borders'
+        }
+    ];
+
+                    
+
+   
+                                                
+    
+  
+     
+    
+   // const marc_D_agua =  'Tascom Tecnologia';
+      
+    const tpRelatorio = [
+        {
+            table:{
+                
+                
+                widths: ['*'],
+                body: [
+                    
+                    [
+                        {text: 'Relatorio Atendimento por Prestador',  style: 'noBorders', fontSize: 8,alignment:'center' ,margin:[0,10,0,0]},
+                    
+                    ],
+
+                ]
+            },
+            layout:'noBorders'
+        }
+    ];
+
+    const filtro = [
+        {
+            table:{
+               
+                headerRows: 1,
+                widths: ["*"],
+                body: [
+                    
+                    [
+                        
+                        {text: ' Periodo de  '+ datafiltro +' até '+ datafiltro+ ' | Setor : '+' | Serviço: * ', fontSize: 8,alignment:'center' ,margin:[0,20,0,20],border:[false,false,false,false] },
+                      
+                    ],
+                ]
+            },
+            layout:'Borders'
+        }
+    ];
+
+
+    const dados = clientes.map((cliente) => {
+        
+            return [
+                
+                {text: cliente.number, fontSize: 8,alignment: 'center', margin: [0, 1, 0, 1],border:[false,false,false,true]},// e?.number,
+                {text: cliente.employee, fontSize: 8, margin: [0, 1, 0, 1],border:[false,false,false,true]},// e?.employee?.name,
+                {text: cliente.patient, fontSize: 8, margin: [0, 1, 0, 1],border:[false,false,false,true]},//e?.employee?.employee_Type?.description,
+                {text: cliente.Treatment_type, fontSize: 8, margin: [0, 1, 0, 1],border:[false,false,false,true]},// e?.planCard?.insurancePlan?.describe ? e?.planCard?.insurancePlan?.describe + '/' +e?.provenance: "  " + '/' +e?.provenance ,
+                {text: cliente.dateHour, fontSize: 8, alignment: 'center',margin: [0, 1, 0, 1],border:[false,false,false,true]},//e?.scheduling?.date +'/'+ e?.scheduling?.hour,
+                {text: cliente.insurancePlanHealthInsurance, fontSize: 8,alignment: 'center', margin: [0, 1, 0, 1],border:[false,false,false,true]},//e?.planCard?.insurancePlan?.describe,    
+                
+                
+                
+               
+            ]
+        }
+       
+    );
+    
+
+    const details = [
+        {
+            table:{
+                style:'tableExample',
+                headerRows: 1,
+                widths: [20,"*","*",100,70,70],
+                
+                body: [
+                   
+                    [
+                        {text: 'Aten', style: 'tableHeader', fontSize: 8,alignment: 'center', border:[false,false,false,true]},
+                        {text: 'Prestador ', style: 'tableHeader',fontSize: 8,border:[false,false,false,true]},
+                        {text: 'Paciente', style: 'tableHeader',fontSize: 8,border:[false,false,false,true]},
+                        {text: 'Consulta ', style: 'tableHeader', fontSize: 8,border:[false,false,false,true]},
+                        {text: 'Data/Hora', style: 'tableHeader', alignment: 'center',fontSize: 8,border:[false,false,false,true] },
+                        {text: 'Plano/Convênio', style: 'tableHeader',alignment: 'center', fontSize: 8,border:[false,false,false,true]},
+                        
+
+                        
+                    ],
+                    
+                    ...dados,
+                     
+                ]
+            },
+            layout: {
+                
+				hLineWidth: function (i, node) {//horizontal
+					return (i === 1 || i === node.table.body.length) ? 2 : 1;
+				},
+				vLineWidth: function (i, node) {//vertical
+					return (i === 0 || i === node.table.widths.length) ? 2 : 2;
+				},
+				hLineColor: function (i, node) {
+					return (i ===  1 || i === node.table.body.length) ? 'black' : 'gray' ;
+				},
+               
+				vLineColor: function (i, node) {
+					return (i === 1 || i === node.table.widths.length) ? 'black' : 'black';
+				},
+            },   
+        }
+    ];
+    var total =  [{  text: 'Total de Atendimentos:'+ dados.length , fontSize: 8,bold:true,  margin:[10,10,0,15] }]
+    
+
+    function Rodape(currentPage, pageCount){
+      return  {text: '\n'+' Emitido por:' + "Tom" +' \n'+'Paginas' + currentPage.toString() + '/' + pageCount , alignment: 'right', fontSize: 8, bold:true,margin: [0, 0, 10, 0] }
+                                                                                        //Margin [ left, top, right, bottom ]
+
+    }
+    const docDefinitios = {
+        pageSize: 'A4',
+        pageMargins: [13,100, 13, 50],
+        
+
+       
+        content: [ details,total],
+        header:function(pageSize) {
+            // you can apply any logic and return any valid pdfmake element
+            return [  cabecalho, tpRelatorio , filtro, { canvas: [ { type: 'rect', x: 170, y: 32, w: pageSize.width - 170, h: 40  } ] },
+                     ]
+
+                     
+        },
+    
+       // watermark: { text: marc_D_agua, color: 'gray ', x, bold: true, italics: false, fontSize: 50, angle: 0},
+        footer: Rodape 
+        
+    }
+
+    pdfMake.createPdf(docDefinitios).print();
+}
+
+export default clientesPDF;
